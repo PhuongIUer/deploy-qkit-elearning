@@ -244,7 +244,7 @@ const handleSubmitPassword = async () => {
     };
 
     // API call to change the password
-    const response = await fetch('http://localhost:3000/api/auth/change-password', {
+    const response = await fetch('http://14.225.217.42:5000/api/auth/change-password', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -280,7 +280,7 @@ const handleSubmitProfile = async () => {
       formDataToSend.append('avatar', tempAvatarFile.value);
     }
 
-    const response = await fetch('http://localhost:3000/api/users/current-profile', {
+    const response = await fetch('http://14.225.217.42:5000/api/users/current-profile', {
       method: 'PATCH',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`,

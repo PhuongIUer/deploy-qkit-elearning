@@ -181,7 +181,7 @@ interface MenuItem {
 }
 
 const api = axios.create({
-    baseURL: 'http://localhost:3000/api',
+    baseURL: 'http://14.225.217.42:5000/api',
   });
   api.interceptors.request.use((config) => {
     const token = localStorage.getItem('authToken');
@@ -272,7 +272,7 @@ const submitForm = () => {
 
 const fetchCategories = async () => {
   try {
-    const response = await axios.get('http://localhost:3000/api/categories');
+    const response = await axios.get('http://14.225.217.42:5000/api/categories');
     categories.value = response.data;
   } catch (error) {
     console.error('Error fetching categories:', error);

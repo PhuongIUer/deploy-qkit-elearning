@@ -94,7 +94,7 @@ import type { AxiosError } from 'axios';
 
 const CART_POLLING_INTERVAL = 30000; // 30 seconds
 const api = axios.create({
-      baseURL: 'http://localhost:3000/api',
+      baseURL: 'http://14.225.217.42:5000/api',
     });
     api.interceptors.request.use((config) => {
       const token = localStorage.getItem('authToken');

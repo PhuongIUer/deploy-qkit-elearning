@@ -57,7 +57,7 @@ const newPassword = ref("");
 const confirmPassword = ref("");
 const errorMessage = ref("");
 
-const apiEndpoint = "http://localhost:3000/api/auth/reset-password"; // API endpoint for resetting password
+const apiEndpoint = "http://14.225.217.42:5000/api/auth/reset-password"; // API endpoint for resetting password
 
 const handleResetPassword = async () => {
   errorMessage.value = "";

@@ -126,7 +126,7 @@ export default {
 
       try {
         const response = await fetch(
-          'http://localhost:3000/api/courses?limit=20&sortBy=totalStudents&order=desc'
+          'http://14.225.217.42:5000/api/courses?limit=20&sortBy=totalStudents&order=desc'
         )
         const data = await response.json()
         apiCourses.value = data.items || []

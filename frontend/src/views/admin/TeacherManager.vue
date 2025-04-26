@@ -170,7 +170,7 @@ export default defineComponent({
     const isLoading = ref(false);
     const error = ref('');
     const api = axios.create({
-      baseURL: 'http://localhost:3000/api',
+      baseURL: 'http://14.225.217.42:5000/api',
     });
     api.interceptors.request.use((config) => {
       const token = localStorage.getItem('authToken');

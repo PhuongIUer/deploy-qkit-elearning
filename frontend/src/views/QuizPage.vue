@@ -186,7 +186,7 @@ const fetchQuizData = async () => {
     console.log('Using lessonId:', lessonId)
     console.log('Token exists:', !!token)
 
-    const response = await fetch(`http://localhost:3000/api/quizzes/lesson/${lessonId}/student`, {
+    const response = await fetch(`http://14.225.217.42:5000/api/quizzes/lesson/${lessonId}/student`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -309,7 +309,7 @@ const completeQuiz = async () => {
 
     console.log('Submitting quiz attempt with data:', submissionData)
 
-    const response = await fetch(`http://localhost:3000/api/quizzes/${quiz.value.id}/attempt`, {
+    const response = await fetch(`http://14.225.217.42:5000/api/quizzes/${quiz.value.id}/attempt`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

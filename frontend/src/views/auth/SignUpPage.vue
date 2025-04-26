@@ -120,7 +120,7 @@ const handleSignUp = async () => {
 
   try {
     const response = await axios.post(
-      "http://localhost:3000/api/auth/register",
+      "http://14.225.217.42:5000/api/auth/register",
       {
         email: email.value,
         password: password.value,

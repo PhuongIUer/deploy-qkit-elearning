@@ -207,7 +207,7 @@ const fetchCourses = async () => {
       params.append('sortBy', 'price_desc'); // Assuming API uses suffix for direction
     }
 
-    const response = await fetch(`http://localhost:3000/api/courses?${params.toString()}`, {
+    const response = await fetch(`http://14.225.217.42:5000/api/courses?${params.toString()}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -226,7 +226,7 @@ const fetchCourses = async () => {
 // Fetch categories
 const fetchCategories = async () => {
   try {
-    const response = await fetch('http://localhost:3000/api/categories')
+    const response = await fetch('http://14.225.217.42:5000/api/categories')
     categories.value = await response.json()
   } catch (error) {
     console.error('Error fetching categories:', error)

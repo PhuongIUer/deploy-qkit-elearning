@@ -130,7 +130,7 @@ export default {
     const popularCourses = ref([])
     const defaultAvatar = 'https://via.placeholder.com/40'
     const api = axios.create({
-      baseURL: 'http://localhost:3000/api',
+      baseURL: 'http://14.225.217.42:5000/api',
     });
     api.interceptors.request.use((config) => {
       const token = localStorage.getItem('authToken');
@@ -171,9 +171,9 @@ export default {
     const fetchCourseRatings = async () => {
       try {
         const [ratingsRes, averageRes, statsRes] = await Promise.all([
-          fetch(`http://localhost:3000/api/courses/${courseId}/ratings`),
-          fetch(`http://localhost:3000/api/courses/${courseId}/ratings/average`),
-          fetch(`http://localhost:3000/api/courses/${courseId}/ratings/stats`),
+          fetch(`http://14.225.217.42:5000/api/courses/${courseId}/ratings`),
+          fetch(`http://14.225.217.42:5000/api/courses/${courseId}/ratings/average`),
+          fetch(`http://14.225.217.42:5000/api/courses/${courseId}/ratings/stats`),
         ])
         courseRatings.value = ratingsRes.ok ? await ratingsRes.json() : []
         averageRating.value = averageRes.ok ? await averageRes.json() : { average: 0, count: 0 }
@@ -248,7 +248,7 @@ export default {
     const fetchPopularCourses = async () => {
       try {
         const popularResponse = await fetch(
-          'http://localhost:3000/api/courses'
+          'http://14.225.217.42:5000/api/courses'
         )
         const popularData = await popularResponse.json()
         popularCourses.value = popularData.items.map((course) => transformCourseData(course))
@@ -259,7 +259,7 @@ export default {
 
     const fetchCourse = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/api/courses/${courseId}`)
+        const response = await fetch(`http://14.225.217.42:5000/api/courses/${courseId}`)
         if (!response.ok) {
           throw new Error('Failed to fetch course data')
         }
@@ -270,7 +270,7 @@ export default {
     }
     const fetchCourseId = async (courseId) => {
       try {
-        const response = await fetch(`http://localhost:3000/api/courses/${courseId}`)
+        const response = await fetch(`http://14.225.217.42:5000/api/courses/${courseId}`)
         if (!response.ok) {
           throw new Error('Failed to fetch course data')
         }

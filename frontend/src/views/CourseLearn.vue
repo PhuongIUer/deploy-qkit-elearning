@@ -211,7 +211,7 @@ const selectLesson = (lesson) => {
 
 const fetchChapters = async () => {
   try {
-    const response = await fetch(`http://localhost:3000/api/chapters/course/${courseId}`, {
+    const response = await fetch(`http://14.225.217.42:5000/api/chapters/course/${courseId}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`,
         Accept: 'application/json',
@@ -233,7 +233,7 @@ const fetchChapters = async () => {
 
 const fetchLessons = async (chapterId) => {
   try {
-    const response = await fetch(`http://localhost:3000/api/lessons/chapter/${chapterId}`, {
+    const response = await fetch(`http://14.225.217.42:5000/api/lessons/chapter/${chapterId}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`,
         Accept: 'application/json',
