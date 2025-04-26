@@ -10,6 +10,9 @@
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview"
   },
+  "resolutions": {
+  "rollup": "2.79.1"
+},
   "dependencies": {
     "@ckeditor/ckeditor5-build-classic": "^41.4.2",
     "@ckeditor/ckeditor5-vue": "^7.3.0",
