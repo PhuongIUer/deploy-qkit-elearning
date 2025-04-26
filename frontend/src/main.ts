@@ -7,7 +7,6 @@ import { createPinia } from 'pinia';
 import "@mdi/font/css/materialdesignicons.css";
 import "vuetify/dist/vuetify.min.css";
 import "@mdi/font/css/materialdesignicons.css";
-import Vue3Toastify from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 import { createVuetify } from "vuetify";
 import * as components from "vuetify/components";

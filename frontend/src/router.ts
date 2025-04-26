@@ -202,6 +202,8 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
   scrollBehavior(to, from, savedPosition) {
+    to.meta.breadcrumb = to.meta.breadcrumb || []
+    from.meta.breadcrumb = from.meta.breadcrumb || []
     if (savedPosition) {
       return savedPosition
     } else {
@@ -212,7 +214,7 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
-
+  from.meta.breadcrumb = to.meta.breadcrumb || []
   try {
     await authStore.fetchUserProfile()
   } catch (error) {

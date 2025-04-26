@@ -151,20 +151,19 @@ import CoursesCarousel from '../components/CoursesCarousel.vue'
 import { VPagination } from 'vuetify/components/VPagination'
 import SearchBackground from '../assets/search-background.png'
 import courseService from '../api/CourseService'
-import type { ICourse } from '../types/courses'
-import type { ICategory } from '../types/courses'
-import { formatDuration } from '../utils/time'
+import type { ICourse,  Category} from '../types/course'
+
 
 // Data states
 const courses = ref<ICourse[]>([])
 const popularCourses = ref<ICourse[]>([])
-const categories = ref<ICategory[]>([])
+const categories = ref<Category[]>([])
 const loading = ref<boolean>(false)
 const totalItems = ref<number>(0)
 
 // Filter and pagination states
 const searchQuery = ref('')
-const selectedCategory = ref<ICategory>()
+const selectedCategory = ref<Category>()
 const selectedLevel = ref('')
 const currentPage = ref(1)
 const itemsPerPage = 12
@@ -274,7 +273,7 @@ const formatPrice = (price: number) => {
 }
 
 // Filter handlers
-const selectCategory = (category: ICategory | null) => {
+const selectCategory = (category: Category | null) => {
   selectedCategory.value = category
   currentPage.value = 1
   fetchCourses()

@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia';
-import { computed, ref } from 'vue';
 import axios , { isAxiosError }from 'axios';
 import type {  Meta } from '@/types';
 import type { IOrder, responseOrders} from '@/types/order';

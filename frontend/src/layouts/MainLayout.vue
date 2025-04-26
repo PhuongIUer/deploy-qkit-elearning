@@ -4,7 +4,7 @@
     <div class="container">
       <router-view />
     </div>
-    <Footer />
+    <Footer/>
   </div>
 </template>
 
@@ -13,8 +13,10 @@ import Navbar from '../components/shared/Navbar.vue'
 import Footer from '../components/shared/Footer.vue'
 
 export default {
+  name: 'ParentComponent',
   components: {
     Navbar,
+    // eslint-disable-next-line vue/no-reserved-component-names
     Footer,
   },
 }

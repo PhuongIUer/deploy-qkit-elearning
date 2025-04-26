@@ -53,7 +53,7 @@
         <p class="newsletter-text">Subscribe to our newsletter for updates</p>
         <div class="newsletter-form">
           <input type="email" placeholder="Your email address" class="newsletter-input" />
-          <button type="submit" class="newsletter-button" @click="handleAdmin">Subscribe</button>
+          <button type="submit" class="newsletter-button" @click="handleSubmit">Subscribe</button>
         </div>
       </div>
     </div>
@@ -64,19 +64,25 @@
   </footer>
 </template>
 
-<script setup>
+<script lang="ts">
 import { toast } from 'vue3-toastify'
-const handleAdmin = () => {
-  toast.success('Subscribed successfully!', {
-    position: 'top-right',
-    autoClose: 3000,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-    progress: undefined,
-  })
-}
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  name: 'Footer',
+  methods: {
+    handleSubmit() {
+      toast.success('Subscribed successfully!', {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        progress: undefined,
+      })
+    }
+  }
+})
 </script>
 
 <style scoped>

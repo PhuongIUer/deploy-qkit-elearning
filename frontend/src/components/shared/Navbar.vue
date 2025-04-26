@@ -202,8 +202,8 @@ const handleApiError = (error: AxiosError, fallbackMessage: string, context?: st
     if (error.response.status === 401) {
       message = 'Please login to access your cart'
       router.push('/login')
-    } else if (error.response.data?.message) {
-      message = error.response.data.message
+    } else if (error.response) {
+      message = "An error occurred while processing your request"
     }
   } else if (error.request) {
     message = 'Network error - please check your connection'
@@ -216,15 +216,6 @@ const cartItems = ref<CartItem[]>([])
 const selectAll = ref(false)
 const isLoading = ref(true)
 
-// Cart data
-const totalAmount = computed(() => {
-  return cartItems.value
-    .filter((item) => item.selected)
-    .reduce((sum, item) => {
-      const price = item.course.discountPrice ?? item.course.price
-      return sum + price
-    }, 0)
-})
 const fetchCartItems = async () => {
   try {
     const response = await axios.get(`${API_BASE_URL}/cart`, {

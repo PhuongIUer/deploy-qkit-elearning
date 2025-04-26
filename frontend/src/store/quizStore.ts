@@ -66,7 +66,7 @@ export const useQuizStore = defineStore('quiz', () => {
   const updateQuiz = async (id: string, updatedQuiz: Partial<IQuiz>) => {
     try {
       const response = await api.patch(`/quizzes/${id}`, updatedQuiz);
-      const index = quizzes.value.findIndex(q => q.id === id);
+      const index = quizzes.value.findIndex(q => q.lessonId === Number(id));
       if (index !== -1) quizzes.value[index] = response.data;
     } catch (err) {
       error.value = isAxiosError(err)
@@ -79,7 +79,7 @@ export const useQuizStore = defineStore('quiz', () => {
   const deleteQuiz = async (id: string) => {
     try {
       await api.delete(`/quizzes/${id}`);
-      quizzes.value = quizzes.value.filter(q => q.id !== id);
+      quizzes.value = quizzes.value.filter(q => q.lessonId != Number(id));
     } catch (err) {
       error.value = isAxiosError(err)
         ? err.response?.data?.message || err.message

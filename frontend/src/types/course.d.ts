@@ -1,5 +1,6 @@
   
   export interface ICourse {
+    any: "Web Develop"|"Frontend"|"Backend"|"Mobile"|"Devops"|"Big data"|"default"
     id: number
     name: string
     price: number

@@ -9,8 +9,8 @@
         </v-btn>
       </v-card-title>
 
-      <v-alert v-if="authStore.user" type="info" variant="tonal" class="mb-4">
-        Applying as: <strong>{{ authStore.user.email }}</strong>
+      <v-alert v-if="authStore.isTeacher" type="info" variant="tonal" class="mb-4">
+        Applying as: <strong>{{ authStore.userEmail }}</strong>
       </v-alert>
 
       <v-card-text>
@@ -204,7 +204,6 @@ import { defineComponent, ref, reactive, onMounted, watch } from 'vue'
 import { VForm } from 'vuetify/components'
 import { useAuthStore } from '../store/auth.ts'
 import { toast } from 'vue3-toastify'
-
 interface FormData {
   name: string
   phone: string
@@ -236,7 +235,6 @@ export default defineComponent({
     const loadingFields = ref(false)
     const authStore = useAuthStore()
     const submitted = ref(false)
-
     // Track which fields have been touched
     const touched = reactive({
       name: false,
@@ -363,7 +361,7 @@ export default defineComponent({
       try {
         const response = await fetch('http://localhost:3000/api/fields', {
           headers: {
-            Authorization: `Bearer ${authStore.token}`,
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
           },
         })
 
@@ -464,11 +462,6 @@ export default defineComponent({
 
         if (formData.cv && formData.cv.length > 0) {
           formDataToSubmit.append('cv', formData.cv[0])
-        }
-
-        const headers = {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/json',
         }
         const response = await fetch('http://localhost:3000/api/applications', {
           method: 'POST',

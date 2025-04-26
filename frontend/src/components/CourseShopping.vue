@@ -58,7 +58,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import defaultCourseImg from '../assets/course-img.png';
-import defaultTeacherImg from '../assets/course-author.png';
 import axios from 'axios';
 
 interface Category {
@@ -118,7 +117,6 @@ const props = defineProps<{
 
 const API_BASE_URL = 'http://localhost:3000/api';
 const course = ref<Course | null>(null);
-const teacher = ref<Teaching | null>(null);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 
