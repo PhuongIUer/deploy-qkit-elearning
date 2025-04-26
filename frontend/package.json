@@ -3,16 +3,15 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "rollup": "3.29.4"
-,
+  "rollup": "3.29.4",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview"
   },
   "resolutions": {
-  "rollup": "2.79.1"
-},
+    "rollup": "2.79.1"
+  },
   "dependencies": {
     "@ckeditor/ckeditor5-build-classic": "^41.4.2",
     "@ckeditor/ckeditor5-vue": "^7.3.0",
@@ -30,6 +29,7 @@
     "@vueuse/core": "^13.0.0",
     "axios": "^1.8.4",
     "chart.js": "^3.9.1",
+    "cors": "^2.8.5",
     "keen-slider": "^6.8.6",
     "lodash-es": "^4.17.21",
     "pinia": "^3.0.1",
