@@ -53,7 +53,7 @@
                   />
                   <div class="cart-item-details">
                     <p class="cart-item-title">{{ item.course.name }}</p>
-                    <p class="cart-item-price">${{ item.course.price }}</p>
+                    <p class="cart-item-price">{{ convertPriceSync(item.course.price) }} </p>
                   </div>
                   <button class="remove-item" @click.stop="removeItemFromCart(item.courseId)">
                     <FontAwesomeIcon :icon="faTimes" />
@@ -153,7 +153,7 @@ const route = useRoute()
 const authStore = useAuthStore()
 const { isLoggedIn, userName, userAvatar, isAdmin, isTeacher } = storeToRefs(authStore)
 const isScrolled = ref(false)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://14.225.217.42:5000/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
 // Interfaces
 interface Category {
   id: number
@@ -193,6 +193,11 @@ interface CartItem {
   course: Course
   selected: boolean
 }
+
+const convertPriceSync = (number: number) => {
+  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
+
 const handleApiError = (error: AxiosError, fallbackMessage: string, context?: string) => {
   console.error(`${context || 'API Error'}:`, error)
 
@@ -291,6 +296,7 @@ const removeItemFromCart = async (courseId: number) => {
     isLoading.value = false
   }
 }
+
 const showCartDropdown = ref(false)
 const cartRef = ref<HTMLElement | null>(null)
 

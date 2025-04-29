@@ -103,8 +103,8 @@ export default {
       }),
     },
     isRegistered: {
-      required: true,
       type: Boolean,
+      default: false,
     },
   },
 

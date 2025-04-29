@@ -359,7 +359,7 @@ export default defineComponent({
     const fetchFields = async () => {
       loadingFields.value = true
       try {
-        const response = await fetch('http://14.225.217.42:5000/api/fields', {
+        const response = await fetch('http://localhost:3000/api/fields', {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('authToken')}`,
           },
@@ -463,7 +463,7 @@ export default defineComponent({
         if (formData.cv && formData.cv.length > 0) {
           formDataToSubmit.append('cv', formData.cv[0])
         }
-        const response = await fetch('http://14.225.217.42:5000/api/applications', {
+        const response = await fetch('http://localhost:3000/api/applications', {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,

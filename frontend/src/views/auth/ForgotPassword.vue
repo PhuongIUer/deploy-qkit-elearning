@@ -55,7 +55,7 @@ const email = ref("");
 const errorMessage = ref("");
 const successMessage = ref("");
 
-const apiEndpoint = "http://14.225.217.42:5000/api/auth/forgot-password";
+const apiEndpoint = "http://localhost:3000/api/auth/forgot-password";
 
 const validateEmail = (): boolean => {
   if (!email.value) {

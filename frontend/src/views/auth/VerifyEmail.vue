@@ -1,6 +1,5 @@
 <template>
     <div>
-      <nav-bar />
       <div class="verify-page">
         <!-- Left -->
         <div class="verify-container">
@@ -38,7 +37,6 @@
           </p>
         </div>
       </div>
-      <FooterVue />
     </div>
   </template>
   
@@ -63,7 +61,7 @@
     errorMessage.value = "";
   
     try {
-      const response = await axios.post("http://14.225.217.42:5000/api/auth/verify-email", {
+      const response = await axios.post("http://localhost:3000/api/auth/verify-email", {
         email: email.value,
         otp: otp.value,
       });
@@ -93,7 +91,7 @@
   errorMessage.value = "";
 
   try {
-    const response = await axios.post(`http://14.225.217.42:5000/api/auth/resend-verification/${email.value}`);
+    const response = await axios.post(`http://localhost:3000/api/auth/resend-verification/${email.value}`);
 
     if (response.status === 200) {
       alert("A new OTP has been sent to your email.");

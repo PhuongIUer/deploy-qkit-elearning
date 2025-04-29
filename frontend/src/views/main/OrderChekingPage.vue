@@ -78,7 +78,7 @@ interface OrderDetails {
   total: number;
 }
 const api = axios.create({
-      baseURL: 'http://14.225.217.42:5000/api',
+      baseURL: 'http://localhost:3000/api',
     });
     api.interceptors.request.use((config) => {
       const token = localStorage.getItem('authToken');
@@ -108,6 +108,7 @@ const statusClass = computed(() => {
     'Cancelled': 'status-cancelled'
   }[orderDetails.value.status] || '';
 });
+const loading = ref(true);
 const apiData = ref<orderRespone>()
 const totalItems = ref(0)
 const items = ref<MCourse[]>()
@@ -139,6 +140,7 @@ const checkOrder = async (ssId : string): Promise<void> => {
 .order-tracker {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   max-width: 800px;
+  height: 40rem;
   margin: 2rem auto;
   padding: 0 1rem;
 }

@@ -26,48 +26,14 @@
               <label class="form-label">Course Name</label>
               <input type="text" class="form-input" placeholder="Enter your course name" v-model="form.name" />
               
-              <div class="course-description">
-              <label class="form-label">Description Course</label>
+              <label class="form-label">Course Description</label>
               <TiptapEditor
                 type="text"
                 class="form-input"
                 placeholder="Enter your course description"
                 v-model="form.description"
               />
-              </div>
-              <label class="form-label">Price</label>
-              <input type="number" class="form-input"  v-model="form.price" />
-
-              <div class="discount-fields">
-                <div class="discount-field">
-                  <label class="form-label">Discount Price</label>
-                  <input 
-                    type="number" 
-                    class="form-input" 
-                    
-                    v-model="form.discountPrice" 
-                  />
-                </div>
-                
-                <div class="discount-field">
-                  <label class="form-label">Discount Percentage</label>
-                  <input 
-                    type="number" 
-                    class="form-input" 
-                    
-                    v-model="form.discountPercentage"
-                    min="0"
-                    max="100"
-                  />
-                </div>
-              </div>
-
-              <label class="form-label">Discount End Date</label>
-              <input 
-                type="datetime-local" 
-                class="form-input" 
-                v-model="form.discountTimeRemaining"
-              />
+              <!-- <div class="course-description"></div> -->
 
               <label class="form-label">Level</label>
               <div class="custom-select-wrapper" :class="{ open: isLevelOpen }">
@@ -96,14 +62,32 @@
                 </select>
                 <font-awesome-icon :icon="faChevronDown" class="dropdown-icon" />
               </div>
-
-              <label class="form-label">Features (comma separated)</label>
-              <input 
-                type="text" 
-                class="form-input" 
-                v-model="featuresInput"
-                @change="updateFeatures"
-              />
+              <label class="form-label">Features</label>
+                <div class="features-list">
+                  <div v-for="(feature, index) in form.features" :key="index" class="feature-item">
+                    <input 
+                      type="text" 
+                      class="form-input feature-input" 
+                      v-model="form.features[index]" 
+                      :placeholder="'Enter feature ' + (index + 1)"
+                    />
+                    <button 
+                      v-if="form.features.length > 1" 
+                      type="button" 
+                      class="delete-feature-btn" 
+                      @click="removeFeature(index)"
+                    >
+                      -
+                    </button>
+                  </div>
+                </div>
+                <button 
+                  type="button" 
+                  class="add-feature-btn" 
+                  @click="addFeature"
+                >
+                  + Add Feature
+                </button>
             </div>
 
             <div class="form-right">
@@ -137,6 +121,24 @@
 
                 <p class="upload-hint">Allowed formats: JPG, PNG</p>
               </div>
+              <label class="form-label">Price</label>
+              <input type="number" class="form-input"  v-model="form.price" />
+
+              <label class="form-label">Discount Percentage</label>
+              <input 
+                type="number" 
+                class="form-input" 
+                v-model="form.discountPercentage"
+                min="0"
+                max="100"
+              />
+            
+              <label class="form-label">Discount End Date</label>
+              <input 
+                type="datetime-local" 
+                class="form-input" 
+                v-model="form.discountTimeRemaining"
+              />
             </div>
           </form>
           <button class="create-button" @click="handleSubmit">
@@ -153,7 +155,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { faBook, faGear, faUpload, faChevronDown } from '@fortawesome/free-solid-svg-icons';
@@ -178,7 +180,7 @@ interface MenuItem {
   label: string;
 }
 const api = axios.create({
-      baseURL: 'http://14.225.217.42:5000/api',
+      baseURL: 'http://localhost:3000/api',
     });
     api.interceptors.request.use((config) => {
       const token = localStorage.getItem('authToken');
@@ -230,7 +232,7 @@ interface Course {
 const form = ref<Partial<Course>>({
   name: '',
   price: 0,
-  description: '', // Ensure description is initialized as an empty string
+  description: '', // Initialize description as an empty string
   categoryId: 0,
   courseLevel: CourseLevel.BEGINNER,
   totalDuration: 0,
@@ -238,18 +240,22 @@ const form = ref<Partial<Course>>({
   discountPrice: 0,
   discountPercentage: 0,
   discountTimeRemaining: '2000-01-01T05:00:00',
-  features: []
+  features: [] // Ensure features is always initialized as an array
 });
+
+if (!form.value.features) {
+  form.value.features = []; // Safeguard to ensure features is always an array
+}
 
 const thumbnailUrl = ref<string | null>(null);
 const imageFile = ref<File | null>(null);
 
-const updateFeatures = () => {
-  form.value.features = featuresInput.value
-    .split(',')
-    .map(f => f.trim())
-    .filter(f => f.length > 0);
-};
+// const updateFeatures = () => {
+//   form.value.features = featuresInput.value
+//     .split(',')
+//     .map(f => f.trim())
+//     .filter(f => f.length > 0);
+// };
 
 const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement;
@@ -323,7 +329,6 @@ const handleSubmit = async () => {
 
   if (
     !form.value.name ||
-    !form.value.name ||
     !form.value.price ||
     !form.value.description ||
     !form.value.categoryId ||
@@ -345,9 +350,8 @@ const handleSubmit = async () => {
     formData.append('courseLevel', form.value.courseLevel);
     formData.append('categoryId', String(form.value.categoryId));
     
-    if (form.value.discountPrice) {
-      formData.append('discountPrice', String(form.value.discountPrice));
-    }
+    const discountPrice = computedDiscountPrice.value;
+    formData.append('discountPrice', String(discountPrice));
     
     if (form.value.discountPercentage) {
       formData.append('discountPercentage', String(form.value.discountPercentage));
@@ -379,7 +383,50 @@ const handleSubmit = async () => {
     isLoading.value = false;
   }
 };
+watch(
+  () => form.value.discountPercentage,
+  (newPercentage) => {
+    if (newPercentage && form.value.price) {
+      const discount = (form.value.price * newPercentage) / 100;
+      form.value.discountPrice = Math.max(0, form.value.price - discount); 
+    } else {
+      form.value.discountPrice = 0; 
+    }
+  }
+);
 
+const computedDiscountPrice = computed(() => {
+  if (form.value.price && form.value.discountPercentage) {
+    const discount = (form.value.price * form.value.discountPercentage) / 100;  
+    return Math.max(0, form.value.price - discount); 
+  }
+  return form.value.price || 0; 
+});
+
+watch(
+  () => form.value.price,
+  (newPrice) => {
+    if (newPrice && form.value.discountPercentage) {
+      const discount = (newPrice * form.value.discountPercentage) / 100;
+      form.value.discountPrice = Math.max(0, newPrice - discount); 
+    } else {
+      form.value.discountPrice = 0; 
+    }
+  }
+);
+
+const addFeature = () => {
+  if (!form.value.features) {
+    form.value.features = []; 
+  }
+  form.value.features.push(''); 
+};
+
+const removeFeature = (index: number) => {
+  if (form.value.features && form.value.features.length > 1) {
+    form.value.features.splice(index, 1); 
+  }
+};
 
 onMounted(() => {
   fetchCategories();
@@ -387,14 +434,16 @@ onMounted(() => {
   if (editingCourseId.value) {
     fetchCourse(Number(editingCourseId.value));
   }
+  if (!form.value.features || form.value.features.length === 0) {
+    form.value.features = ['']; 
+  }
 });
 </script>
   
   <style scoped>
   .course-page {
     width: 100%;
-    width: 100%;
-    min-height: 120vh;
+    /* min-height: 120vh; */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -408,6 +457,7 @@ onMounted(() => {
     width: 100%;
     box-sizing: border-box;
     max-width: 1200px;
+    margin-bottom: 40px;
   }
   
   .sidebar-layout {
@@ -491,19 +541,13 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  width: 20%;
+  /* width: 20%; */
 }
 
 .thumbnail-container {
   width: 300px;
-  width: 300px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-}
-.discount-fields {
-  display: flex;
-  gap: 16px; /* Adjust this value for spacing between fields */
   align-items: center;
 }
 
@@ -629,7 +673,60 @@ onMounted(() => {
   margin-right: 8px;
 }
 
- /* responsive */
+/* feature */
+.features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.feature-input {
+  flex: 1; /* Input sẽ chiếm toàn bộ không gian còn lại */
+  padding: 10px 14px;
+  border: 1px solid #6c9d8f;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: width 0.3s ease;
+}
+
+.add-feature-btn {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background-color: #6c9d8f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.add-feature-btn:hover {
+  background-color: #548b7c;
+}
+
+.delete-feature-btn {
+  padding: 6px 10px;
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.delete-feature-btn:hover {
+  background-color: #e55a5a;
+}
+
+.feature-item:not(:has(.delete-feature-btn)) .feature-input {
+  width: 100%; /* Khi không có nút Remove, input chiếm toàn bộ chiều rộng */
+}
  /* responsive */
   @media (max-width: 1200px) {
     .main-container {

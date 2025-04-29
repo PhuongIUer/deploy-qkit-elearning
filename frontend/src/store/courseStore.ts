@@ -5,7 +5,7 @@ import type { ICourse, ICourseTeaching, averageRating } from '../types/course';
 import type { ICommonResponse, ITeachingResponse } from '@/types';
 export const courseStore = defineStore('course', () => {
   const api = axios.create({
-    baseURL: 'http://14.225.217.42:5000/api',
+    baseURL: 'http://localhost:3000/api',
   });
   api.interceptors.request.use((config) => {
     const token = localStorage.getItem('authToken');

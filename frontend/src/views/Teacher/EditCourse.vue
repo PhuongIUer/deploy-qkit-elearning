@@ -35,47 +35,13 @@
                   placeholder="Enter your course description"
                   v-model="form.description"
                 />
-                
-                <!-- Optional preview -->
+
                 <div v-if="form.description" class="preview" style="padding-top: 10px;">
                   <h4>Previous description:</h4>
                   <div class="preview-text" v-html="form.description"></div>
                 </div>
+
               </div>
-              <label class="form-label">Price</label>
-              <input type="number" class="form-input"  v-model="form.price" />
-
-              <div class="discount-fields">
-                <div class="discount-field">
-                  <label class="form-label">Discount Price</label>
-                  <input 
-                    type="number" 
-                    class="form-input" 
-                    
-                    v-model="form.discountPrice" 
-                  />
-                </div>
-                
-                <div class="discount-field">
-                  <label class="form-label">Discount Percentage</label>
-                  <input 
-                    type="number" 
-                    class="form-input" 
-                    
-                    v-model="form.discountPercentage"
-                    min="0"
-                    max="100"
-                  />
-                </div>
-              </div>
-
-              <label class="form-label">Discount End Date</label>
-              <input 
-                type="datetime-local" 
-                class="form-input" 
-                v-model="form.discountTimeRemaining"
-              />
-
               <label class="form-label">Level</label>
               <div class="custom-select-wrapper" :class="{ open: isLevelOpen }">
                 <select class="form-input custom-select"
@@ -87,32 +53,49 @@
                   <option value="INTERMEDIATE">Intermediate</option>
                   <option value="ADVANCED">Advanced</option>
                 </select>
-                <font-awesome-icon :icon="faChevronDown" class="dropdown-icon" />
-              </div>
-
-              <label class="form-label">Category</label>
-              <div class="custom-select-wrapper" :class="{ open: isCategoryOpen }">
-                <select class="form-input custom-select"
-                        v-model="form.categoryId"
-                        @focus="isCategoryOpen = true"
-                        @blur="isCategoryOpen = false">
-                  <option disabled value="">Select Category</option>
-                  <option v-for="category in categories" :key="category.id" :value="category.id">
-                    {{ category.name }}
-                  </option>
-                </select>
-                <font-awesome-icon :icon="faChevronDown" class="dropdown-icon" />
-              </div>
-
-              <label class="form-label">Features (comma separated)</label>
-              <input 
-                type="text" 
-                class="form-input" 
-                v-model="featuresInput"
-                @change="updateFeatures"
-              />
+              <font-awesome-icon :icon="faChevronDown" class="dropdown-icon" />
             </div>
 
+            <label class="form-label">Category</label>
+            <div class="custom-select-wrapper" :class="{ open: isCategoryOpen }">
+              <select class="form-input custom-select"
+                      v-model="form.categoryId"
+                      @focus="isCategoryOpen = true"
+                      @blur="isCategoryOpen = false">
+                <option disabled value="">Select Category</option>
+                <option v-for="category in categories" :key="category.id" :value="category.id">
+                  {{ category.name }}
+                </option>
+              </select>
+              <font-awesome-icon :icon="faChevronDown" class="dropdown-icon" />
+            </div>
+            <label class="form-label">Features</label>
+                <div class="features-list">
+                  <div v-for="(feature, index) in form.features" :key="index" class="feature-item">
+                    <input 
+                      type="text" 
+                      class="form-input feature-input" 
+                      v-model="form.features[index]" 
+                      :placeholder="'Enter feature ' + (index + 1)"
+                    />
+                    <button 
+                      v-if="form.features.length > 1" 
+                      type="button" 
+                      class="delete-feature-btn" 
+                      @click="removeFeature(index)"
+                    >
+                      -
+                    </button>
+                  </div>
+                </div>
+                <button 
+                  type="button" 
+                  class="add-feature-btn" 
+                  @click="addFeature"
+                >
+                  + Add Feature
+                </button>
+            </div>
             <div class="form-right">
               <div class="thumbnail-container">
                 <div class="thumbnail-box">
@@ -144,6 +127,25 @@
 
                 <p class="upload-hint">Allowed formats: JPG, PNG</p>
               </div>
+              
+              <label class="form-label">Price</label>
+              <input type="number" class="form-input"  v-model="form.price" />
+
+              <label class="form-label">Discount Percentage</label>
+              <input 
+                type="number" 
+                class="form-input" 
+                v-model="form.discountPercentage"
+                min="0"
+                max="100"
+              />
+              <label class="form-label">Discount End Date</label>
+              <input 
+                type="datetime-local" 
+                class="form-input" 
+                v-model="form.discountTimeRemaining"
+              />
+              
             </div>
           </form>
           <button class="create-button" @click="handleSubmit">
@@ -181,7 +183,7 @@ interface MenuItem {
 }
 
 const api = axios.create({
-    baseURL: 'http://14.225.217.42:5000/api',
+    baseURL: 'http://localhost:3000/api',
   });
   api.interceptors.request.use((config) => {
     const token = localStorage.getItem('authToken');
@@ -272,7 +274,7 @@ const submitForm = () => {
 
 const fetchCategories = async () => {
   try {
-    const response = await axios.get('http://14.225.217.42:5000/api/categories');
+    const response = await axios.get('http://localhost:3000/api/categories');
     categories.value = response.data;
   } catch (error) {
     console.error('Error fetching categories:', error);
@@ -294,7 +296,6 @@ const fetchCourse = async (id: number) => {
 const handleSubmit = async () => {
   const token = localStorage.getItem('authToken');
   if (!token) return toast.error('You must be logged in!');
-  updateFeatures();
   const requiredFields = ['name', 'price', 'description', 'categoryId', 'courseLevel'];
   for (const field of requiredFields) {
     if (!form.value[field as keyof Course]) {
@@ -310,8 +311,9 @@ const handleSubmit = async () => {
     formData.append('courseLevel', form.value.courseLevel!);
     formData.append('categoryId', String(form.value.categoryId!));
 
-    if (form.value.discountPrice)
-      formData.append('discountPrice', String(form.value.discountPrice));
+    const discountPrice = computedDiscountPrice.value;
+    formData.append('discountPrice', String(discountPrice));
+
     if (form.value.discountPercentage)
       formData.append('discountPercentage', String(form.value.discountPercentage));
     if (form.value.discountTimeRemaining)
@@ -358,9 +360,34 @@ const initFormWithCourseData = () => {
   thumbnailUrl.value = c.image || null;
 };
 
+const computedDiscountPrice = computed(() => {
+  if (form.value.price && form.value.discountPercentage) {
+    const discount = (form.value.price * form.value.discountPercentage) / 100;
+    return Math.max(0, form.value.price - discount); 
+  }
+  return form.value.price || 0; 
+});
+
+const addFeature = () => {
+  if (!form.value.features) {
+    form.value.features = []; 
+  }
+  form.value.features.push(''); 
+};
+
+const removeFeature = (index: number) => {
+  if (form.value.features && form.value.features.length > 1) {
+    form.value.features.splice(index, 1); 
+  }
+};
+
 onMounted(() => {
   fetchCategories();
   fetchCourse(editingCourseId);
+    
+  if (!form.value.features || form.value.features.length === 0) {
+    form.value.features = ['']; 
+  }
 });
 
 </script>
@@ -484,7 +511,7 @@ onMounted(() => {
 }
 
 .thumbnail-container {
-  width: 250px;
+  width: 300px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -609,7 +636,60 @@ onMounted(() => {
   margin-right: 8px;
 }
 
+/* feature */
+.features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.feature-input {
+  flex: 1; /* Input sẽ chiếm toàn bộ không gian còn lại */
+  padding: 10px 14px;
+  border: 1px solid #6c9d8f;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: width 0.3s ease;
+}
+
+.add-feature-btn {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background-color: #6c9d8f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.add-feature-btn:hover {
+  background-color: #548b7c;
+}
+
+.delete-feature-btn {
+  padding: 6px 10px;
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.delete-feature-btn:hover {
+  background-color: #e55a5a;
+}
+
+.feature-item:not(:has(.delete-feature-btn)) .feature-input {
+  width: 100%; 
+}
 
   /* responsive */
   @media (max-width: 1200px) {
