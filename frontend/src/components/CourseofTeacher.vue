@@ -82,7 +82,7 @@
   import axios,{ isAxiosError } from 'axios'
   import { toast } from 'vue3-toastify'
   const api = axios.create({
-    baseURL: 'http://localhost:3000/api',
+    baseURL: 'http://14.225.217.42:5000/api',
   });
   api.interceptors.request.use((config) => {
     const token = localStorage.getItem('authToken');

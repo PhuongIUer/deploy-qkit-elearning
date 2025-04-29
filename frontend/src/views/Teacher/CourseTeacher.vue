@@ -57,6 +57,12 @@
 </div>
     </div>
   </div>
+        <div class="course-item create-card" @click="goToCreateCourse">
+          <div class="create-icon-wrapper">
+            <font-awesome-icon :icon="faPlus" class="create-icon"/>
+          </div>
+          <div class="create-text">Create</div>
+        </div>
 
 </template>
 
@@ -84,7 +90,7 @@ const menuItems: MenuItem[] = [
 ];
 
 const api = axios.create({
-      baseURL: 'http://localhost:3000/api',
+      baseURL: 'http://14.225.217.42:5000/api',
     });
     api.interceptors.request.use((config) => {
       const token = localStorage.getItem('authToken');
@@ -113,6 +119,7 @@ const toggleTeacher = () => {
 };
 
 const goToCreateCourse = () => {
+  router.push('/course-teacher/create-course');
   router.push('/course-teacher/create-course');
 };
 
@@ -145,7 +152,7 @@ onMounted(() => {
 
 <style>
 .course-page{
-    /* min-height: 120vh; */
+    min-height: 120vh;
     display: flex;
     flex-direction: column;
     align-items: center;

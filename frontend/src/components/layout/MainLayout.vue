@@ -1,30 +1,32 @@
 <template>
-    <div>
-      <Navbar />
-      <div class="container mt-4">
-        <router-view />
-      </div>
-      <Footer />
+  <div>
+    <Navbar />
+    <div class="container">
+      <router-view />
     </div>
-  
-  </template>
-  
-  <script lang="ts">
-  import Navbar from '../components/Navbar.vue';
-  import Footer from '../components/Footer.vue';
-  
-  
-  export default {
-    components: {
-      Navbar,
-      Footer
-    },
-  }
-  </script>
-  
-  
-  <style>
-  .container {
-      height: calc(100vh - 70px - );
-  }
-  </style>
+    <Footer/>
+  </div>
+</template>
+
+<script lang="ts">
+import Navbar from '../components/shared/Navbar.vue'
+import Footer from '../components/shared/Footer.vue'
+
+export default {
+  name: 'ParentComponent',
+  components: {
+    Navbar,
+    // eslint-disable-next-line vue/no-reserved-component-names
+    Footer,
+  },
+}
+</script>
+
+<style>
+.--pos-relative {
+  position: relative;
+}
+.container {
+  height: calc(100% - 160px);
+}
+</style>

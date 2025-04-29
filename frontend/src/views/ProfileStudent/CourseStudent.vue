@@ -56,11 +56,10 @@ import CourseCard from '../../components/CourseCard.vue';
 import axios from 'axios';
 import type { ICourse } from '../../types/course';
 import type { ICommonResponse } from '../../types/index';
-
 const courses = ref<ICourse[]>([]);
 const router = useRouter();
 const api = axios.create({
-      baseURL: 'http://localhost:3000/api',
+      baseURL: 'http://14.225.217.42:5000/api',
     });
     api.interceptors.request.use((config) => {
       const token = localStorage.getItem('authToken');

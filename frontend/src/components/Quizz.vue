@@ -8,7 +8,7 @@
           <div class="quiz-title-wrapper">
             <input class="quiz-input quiz-title-input" v-model="quizData.title" placeholder="Quiz Title" />
           </div>
-
+  
           <div class="quiz-info">
             <div class="quiz-item">
               <label class="quiz-label">Passing Score (%):</label>
@@ -49,9 +49,7 @@
                   :name="'correctAnswer-' + qIndex" 
                   :value="true" 
                   @change="setCorrectOption(qIndex, index)"
-                  :checked="option.isCorrect" 
-                />
-
+                  />
                 <textarea class="answer-input" v-model="option.text" placeholder="Answer Text"></textarea>
                 <textarea class="answer-input" v-model="option.explanation" placeholder="Explanation"></textarea>
               </div>
@@ -82,65 +80,58 @@ import { ref, onMounted, computed } from 'vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import type { IQuiz, IOption, IQuestion } from '../types/quizz';
+import { useRoute } from 'vue-router';
 import { useQuizStore } from '../store/quizStore';
 
-// Props & Emits
+const route = useRoute();
+const quizStore = useQuizStore();
+
+const emit = defineEmits(['update:showQuizModal', 'saveQuiz']);
 const props = defineProps<{
   showQuizModal: boolean;
   lessonId: number;
-  quizId?: string; 
-  onSave: (quizData: IQuiz) => void;
-
 }>(); 
-const emit = defineEmits(['update:showQuizModal', 'saveQuiz']);
 
-// Store & Router
-const quizStore = useQuizStore();
-
-// Local States
-const quizData = ref<IQuiz>({
-  title: '',
-  description: '',
-  lessonId: props.lessonId,
-  passingScore: 70,
-  timeLimit: 30,
-  questions: []
-});
-const isEditMode = computed(() => !!quizId); 
-
-// Functions
 const createEmptyOptions = (): IOption[] => {
-  return Array.from({ length: 4 }, (_, index) => ({
-    id: index + 1,
+  return Array.from({ length: 4 }, () => ({
     text: '',
     isCorrect: false,
     explanation: ''
   }));
 };
 
+const quizData = ref<IQuiz>({
+  title: '',
+  description: '',
+  lessonId: props.lessonId,
+  passingScore: 70,
+  timeLimit: 0,
+  questions: []
+});
+
+const quizId = route.params.id as string;
+const isEditMode = computed(() => !!quizId);
+
 const loadQuiz = async () => {
-  if (props.lessonId) {
-    await quizStore.fetchQuizByLessonId(props.lessonId);
+  if (isEditMode.value) {
+    await quizStore.fetchQuizById(quizId);
     if (quizStore.selectedQuiz) {
-      quizData.value = JSON.parse(JSON.stringify(quizStore.selectedQuiz));
-      quizData.value.questions.forEach((question: IQuestion, index: number)=> {
-        question.order = index + 1;
-      });
-      console.log('Loaded quiz data:', quizData.value); 
-    } else {
-      console.warn('No quiz found for this lesson');
+      quizData.value = { ...quizStore.selectedQuiz };
     }
   } else {
-    console.warn('lessonId is missing or invalid');
+    await quizStore.fetchQuizByLessonId(props.lessonId);
+    if (quizStore.selectedQuiz) {
+      quizData.value = { ...quizStore.selectedQuiz };
+    }
   }
 };
 
+
 const addQuestion = () => {
-  const nextOrder = quizData.value.questions.length + 1;
   quizData.value.questions.push({
     question: '',
     points: 10,
-    order: nextOrder,
+    order: quizData.value.questions.length + 1,
     options: createEmptyOptions()
   });
 };
@@ -154,52 +145,31 @@ const removeQuestion = (index: number) => {
 };
 
 const cancelQuiz = () => {
-  emit('update:showQuizModal', false);  
-};
-
-const setCorrectOption = (qIndex: number, optionIndex: number) => {
-  quizData.value.questions[qIndex].options.forEach((opt: IOption, idx: number) => {
-    opt.isCorrect = idx === optionIndex;  
-  });
+  emit('update:showQuizModal', false);
 };
 
 const saveQuiz = async () => {
   try {
-    const cleanedQuestions = quizData.value.questions.map((question: IQuestion, qIndex: number) => ({
-      question: question.question,
-      points: question.points || 10,
-      order: qIndex + 1,
-      options: question.options.map((option: IOption) => ({
-        text: option.text,
-        isCorrect: option.isCorrect,
-        explanation: option.explanation?.trim() || '',
-      })),
-    }));
-
-    const cleanedQuiz = {
-      title: quizData.value.title,
-      description: quizData.value.description,
-      lessonId: props.lessonId,
-      passingScore: quizData.value.passingScore,
-      timeLimit: quizData.value.timeLimit,
-      questions: cleanedQuestions,
-    };
-
-    if (isEditMode.value && quizId) {
-      await quizStore.updateQuiz(Number(quizId), cleanedQuiz);
+    if (isEditMode.value) {
+      await quizStore.updateQuiz(quizId, quizData.value);
     } else {
-      await quizStore.createQuizForLesson(props.lessonId, cleanedQuiz);
+      await quizStore.createQuiz({
+        ...quizData.value,
+        lessonId: props.lessonId
+      });
     }
-    props.onSave(cleanedQuiz);
     emit('saveQuiz');
     emit('update:showQuizModal', false);
   } catch (error) {
     console.error('Error saving quiz:', error);
   }
 };
-const quizId = props.quizId;
 
-onMounted(loadQuiz);
+const setCorrectOption = (qIndex: number, optionIndex: number) => {
+  quizData.value.questions[qIndex].options.forEach((opt: IOption, idx: number) => {
+    opt.isCorrect = idx === optionIndex;
+  });
+};
 
 // const handleDelete = async () => {
 //   if (quizId && confirm('Are you sure you want to delete this quiz?')) {
@@ -213,6 +183,17 @@ onMounted(loadQuiz);
 //   }
 // };
 
+onMounted(async () => {
+  if (props.lessonId) {
+    await quizStore.fetchQuizByLessonId(props.lessonId);
+    if (quizStore.selectedQuiz) {
+      quizData.value = { ...quizStore.selectedQuiz };
+    }
+  } else {
+    console.warn('lessonId is missing or invalid');
+  }
+});
+onMounted(loadQuiz);
 </script>
 
 <style scoped>

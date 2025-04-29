@@ -20,7 +20,7 @@ export const useAuthStore = defineStore('auth', () => {
         return;
       }
 
-      const response = await axios.get('http://localhost:3000/api/auth/profile', {
+      const response = await axios.get('http://14.225.217.42:5000/api/auth/profile', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -48,7 +48,7 @@ export const useAuthStore = defineStore('auth', () => {
   });
   const logout = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/auth/logout', {
+      const response = await fetch('http://14.225.217.42:5000/api/auth/logout', {
         method: 'POST',
         headers: {
           'Accept': '*/*',

@@ -186,7 +186,7 @@ const fetchQuizData = async () => {
     console.log('Using lessonId:', lessonId)
     console.log('Token exists:', !!token)
 
-    const response = await fetch(`http://localhost:3000/api/quizzes/lesson/${lessonId}/student`, {
+    const response = await fetch(`http://14.225.217.42:5000/api/quizzes/lesson/${lessonId}/student`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -215,8 +215,8 @@ const fetchQuizData = async () => {
       throw new Error('Invalid quiz data received from server')
     }
 
-    quiz.value = data;
-    timeRemaining.value = quiz.value.timeLimit * 60;
+    quiz.value = data
+    timeRemaining.value = quiz.value.timeLimit * 60
 
     // Format start time in YYYY-MM-DD HH:MM:SS format to match API expectations
     const now = new Date()
@@ -309,7 +309,7 @@ const completeQuiz = async () => {
 
     console.log('Submitting quiz attempt with data:', submissionData)
 
-    const response = await fetch(`http://localhost:3000/api/quizzes/${quiz.value.id}/attempt`, {
+    const response = await fetch(`http://14.225.217.42:5000/api/quizzes/${quiz.value.id}/attempt`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -439,8 +439,7 @@ const isAnswerCorrect = (questionId, answerIds) => {
 onMounted(() => {
   console.log('lessonId from route:', lessonId)
   if (!lessonId) {
-    toast.error('Invalid lesson ID');
-    router.push('/courses');
+    toast.error('Invalid lesson ID')
     return
   }
   fetchQuizData()

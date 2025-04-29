@@ -115,7 +115,7 @@ const props = defineProps<{
   courseData?: Course; // Optional prop for preloaded data
 }>();
 
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = 'http://14.225.217.42:5000/api';
 const course = ref<Course | null>(null);
 const isLoading = ref(false);
 const error = ref<string | null>(null);

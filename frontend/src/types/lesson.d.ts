@@ -1,6 +1,4 @@
 import { faBook, faGear} from '@fortawesome/free-solid-svg-icons';
-import type { IQuiz } from './quizz';
-
 export type listLesson = ILesson[]
 
 export interface ILesson {
@@ -10,7 +8,6 @@ export interface ILesson {
   position: number
   videoUrl: string
   duration: number
-  quizzes?: IQuiz[]
 }
 
 export interface IChapter {
@@ -19,7 +16,6 @@ export interface IChapter {
     description: string;
     totalLessons: number;
     totalDuration: number;
-    lessons?: ILesson[];
   }
   
 export interface IMenuItem {

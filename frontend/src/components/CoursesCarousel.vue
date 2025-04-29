@@ -5,7 +5,7 @@
       <div ref="sliderRef" class="keen-slider">
         <div v-for="(course, index) in processedCourses" :key="index" class="keen-slider__slide">
           <div class="course-slide-container">
-            <CourseCard :course="course" :isRegistered="false" />
+            <CourseCard :course="course" />
           </div>
         </div>
       </div>
@@ -29,7 +29,6 @@ export default {
     CourseCard,
   },
   props: {
-    
     courses: {
       type: Array,
       default: () => [],
@@ -127,7 +126,7 @@ export default {
 
       try {
         const response = await fetch(
-          'http://localhost:3000/api/courses?limit=20&sortBy=totalStudents&order=desc'
+          'http://14.225.217.42:5000/api/courses?limit=20&sortBy=totalStudents&order=desc'
         )
         const data = await response.json()
         apiCourses.value = data.items || []

@@ -107,8 +107,8 @@
             <div
               class="tab"
               :class="{ 'is-active': activeTab === 'quiz' }"
-              @click="handleQuizTabClick"
-              >
+              @click="activeTab = 'quiz'"
+            >
               Quiz
             </div>
           </div>
@@ -121,31 +121,23 @@
                 {{ currentLesson?.description || 'Lesson description not available' }}
               </p>
             </div>
-            <div v-if="activeTab === 'quiz'" class="overview-content">
+            <div v-if="activeTab === 'quiz'" class="quiz-content">
               <h3>Lesson Quiz</h3>
-              <div v-if="quiz && quiz.questions && quiz.questions.length > 0">
-                <div v-for="question in quiz.questions" :key="question.id">
-                  {{ question.text }}
+              <div class="quiz-info">
+                <div class="info-item">
+                  <div class="info-value">5</div>
+                  <div class="info-label">Questions</div>
                 </div>
-                <div class="quiz-info">
-                  <div class="info-item">
-                    <div class="info-value">{{ quiz.questions.length }}</div>
-                    <div class="info-label">Questions</div>
-                  </div>
-                  <div class="info-item">
-                    <div class="info-value">{{ quiz.timeLimit }} min</div>
-                    <div class="info-label">Duration</div>
-                  </div>
-                  <div class="info-item">
-                    <div class="info-value">{{ quiz.passingScore }}</div>
-                    <div class="info-label">Passing Score</div>
-                  </div>
+                <div class="info-item">
+                  <div class="info-value">5 min</div>
+                  <div class="info-label">Duration</div>
                 </div>
-                <button class="start-quiz-btn" @click="startQuiz">Start Quiz</button>
+                <div class="info-item">
+                  <div class="info-value">70</div>
+                  <div class="info-label">Passing Score</div>
+                </div>
               </div>
-              <div v-else>
-                <p>No quiz available for this lesson.</p>
-              </div>
+              <button class="start-quiz-btn" @click="startQuiz">Start Quiz</button>
             </div>
           </div>
         </template>
@@ -172,12 +164,6 @@ const course = ref(null)
 const loading = ref(true)
 const videoPlayer = ref(null)
 
-const handleQuizTabClick = () => {
-  activeTab.value = 'quiz';
-  if (!quiz.value) {
-    console.warn('No quiz available for this lesson.');
-  }
-};
 // Mock learning points since they're not in the API
 const learningPoints = ref([
   'Key concepts in the lesson',
@@ -186,17 +172,7 @@ const learningPoints = ref([
 ])
 
 const startQuiz = () => {
-  if (quiz.value) {
-    router.push({
-      name: 'quiz',
-      params: { 
-        quizId: quiz.value.id,
-        lessonId: activeLesson.value
-      }
-    });
-  } else {
-    console.error('No quiz available to start.');
-  }
+  router.push(`/courses/quiz/1`)
 }
 const currentChapter = computed(() => {
   return chapters.value.find((ch) => ch.id === activeChapter.value)
@@ -230,21 +206,17 @@ const toggleChapter = async (chapterId) => {
 
 const selectLesson = (lesson) => {
   activeLesson.value = lesson.id
-  activeTab.value = 'overview';
-  fetchQuiz(lesson.id);
+  activeTab.value = 'overview'
 }
 
 const fetchChapters = async () => {
   try {
-    const response = await fetch(`http://localhost:3000/api/chapters/course/${courseId}`, {
+    const response = await fetch(`http://14.225.217.42:5000/api/chapters/course/${courseId}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`,
         Accept: 'application/json',
       },
     })
-    if (!response.ok) {
-      throw new Error(`Failed to fetch chapters: ${response.statusText}`);
-    }
     chapters.value = await response.json()
 
     // Automatically select the first chapter with lessons if available
@@ -261,15 +233,12 @@ const fetchChapters = async () => {
 
 const fetchLessons = async (chapterId) => {
   try {
-    const response = await fetch(`http://localhost:3000/api/lessons/chapter/${chapterId}`, {
+    const response = await fetch(`http://14.225.217.42:5000/api/lessons/chapter/${chapterId}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`,
         Accept: 'application/json',
       },
     })
-    if (!response.ok) {
-      throw new Error(`Failed to fetch lessons: ${response.statusText}`);
-    }
     const chapterLessons = await response.json()
     // Add chapterId to each lesson for filtering
     const lessonsWithChapter = chapterLessons.map((lesson) => ({
@@ -282,46 +251,13 @@ const fetchLessons = async (chapterId) => {
   }
 }
 
-const quiz = ref(null); // Biến lưu trữ dữ liệu quiz
-const token = localStorage.getItem('authToken');
-if (!token) {
-  console.error('No token found in localStorage');
-}
-
-const fetchQuiz = async (lessonId) => {
-  try {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      throw new Error('Unauthorized: No token found');
-    }
-
-    const response = await fetch(`http://localhost:3000/api/quizzes/lesson/${lessonId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error('Unauthorized: Invalid token');
-      }
-      throw new Error(`Failed to fetch quiz: ${response.statusText}`);
-    }
-    const data = await response.json(); 
-    quiz.value = data || null; 
-  } catch (error) {
-    console.error('Error fetching quiz:', error);
-    quiz.value = null; 
-  }
-};
-
 watch(currentLesson, (newLesson) => {
   if (newLesson?.videoUrl && videoPlayer.value) {
-
+    // Reset and play the new video
     videoPlayer.value.load()
     videoPlayer.value.play().catch((e) => {
       console.error('Autoplay prevented:', e)
+      // Handle autoplay restrictions (user may need to interact first)
     })
   }
 })

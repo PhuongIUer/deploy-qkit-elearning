@@ -74,17 +74,7 @@
         <!-- Recent Orders -->
         <div class="table-card">
           <div class="card-header">
-            <h3>Recent Orders</h3>
-            <div class="pagination-controls">
-              <div class="items-per-page">
-                <span>Items per page:</span>
-                <select v-model="itemsPerPage" @change="fetchOrders">
-                  <option value="5">5</option>
-                  <option value="10">10</option>
-                  <option value="15">15</option>
-                </select>
-              </div>
-            </div>
+          <h3>Recent Orders</h3>
           </div>
           <div class="table-container">
             <table>
@@ -123,30 +113,8 @@
               </tbody>
             </table>
           </div>
-          <div class="pagination-footer">
-            <span class="showing-items">
-              Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to 
-              {{ Math.min(currentPage * itemsPerPage, totalOrders) }} of 
-              {{ totalOrders }} entries
-            </span>
-            <div class="pagination-buttons">
-              <button 
-                @click="previousPage" 
-                :disabled="currentPage === 1"
-                class="pagination-button"
-              >
-                Previous
-              </button>
-              <button 
-                @click="nextPage" 
-                :disabled="currentPage * itemsPerPage >= totalOrders"
-                class="pagination-button"
-              >
-                Next
-              </button>
-            </div>
-          </div>
         </div>
+
       </div>
     </div>
   </div>
@@ -177,29 +145,10 @@ export default defineComponent({
     const totalUsers = ref(0);
     const totalCourses = ref(0);
     const totalOrders = ref(0);
-    const currentPage = ref(1);
-    const itemsPerPage = ref(10);
-    const totalPages = computed(() => Math.ceil(totalOrders.value / itemsPerPage.value));
     const Orders = ref<IOrder[]>([])
     const fetchTotalUsers = async () => {
       await store.fetchUsersAll();
       totalUsers.value = store.numberOfUsers;
-    };
-
-
-    // Add pagination methods
-    const nextPage = () => {
-      if (currentPage.value < totalPages.value) {
-        currentPage.value++;
-        fetchOrders();
-      }
-    };
-
-    const previousPage = () => {
-      if (currentPage.value > 1) {
-        currentPage.value--;
-        fetchOrders();
-      }
     };
     const fetchCoursses = async () => {
       await courses.fetchCoursesAll();
@@ -209,10 +158,7 @@ export default defineComponent({
       return Orders.value.reduce((acc, order) => order.status=="completed"?acc + order.totalPrice:acc, 0);
     });
     const fetchOrders = async () => {
-      await order.fetchOrder(
-        currentPage.value,
-        itemsPerPage.value
-      );
+      await order.fetchOrder();
       Orders.value = order.Orders;
       totalOrders.value = order.Meta?.totalItems || 0;
     };
@@ -235,11 +181,8 @@ export default defineComponent({
       Orders,
       totalRevenue,
       formatDate,
-      currentPage,
-      itemsPerPage,
-      nextPage,
-      previousPage,
-      fetchOrders
+      
+      
     };
   }
 });
@@ -276,58 +219,7 @@ export default defineComponent({
   align-items: center;
   gap: 1.5rem;
 }
-.pagination-controls {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
 
-.items-per-page {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.items-per-page select {
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-}
-
-.pagination-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  border-top: 1px solid #eee;
-}
-
-.pagination-buttons {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.pagination-button {
-  padding: 0.5rem 1rem;
-  background-color: #f5f5f5;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.pagination-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.pagination-button:hover:not(:disabled) {
-  background-color: #e9e9e9;
-}
-
-.showing-items {
-  color: #666;
-  font-size: 0.9rem;
-}
 .user-profile {
   display: flex;
   align-items: center;
@@ -370,8 +262,9 @@ export default defineComponent({
   grid-template-columns: repeat(12, 1fr);
   gap: 1.5rem;
 }
+
 .summary-card {
-  grid-column: span 6;
+  grid-column: span 3;
   border-radius: 0.5rem;
   padding: 1.5rem;
   color: white;
@@ -495,7 +388,7 @@ export default defineComponent({
 }
 
 .table-card {
-  grid-column: span 12;
+  grid-column: span 8;
   background-color: white;
   border-radius: 0.5rem;
   padding: 1.5rem;
