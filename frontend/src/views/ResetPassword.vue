@@ -11,7 +11,7 @@
       <!-- Right -->
       <div class="reset-form">
         <div class="logo">
-          <img src="../assets/logo1.png" alt="Logo" />
+          <img src="../assets/logo.png" alt="Logo" />
         </div>
         <h2>Set New Password</h2>
 
