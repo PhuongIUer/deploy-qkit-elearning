@@ -12,29 +12,23 @@
           <div class="order-info">
             <div class="info-row">
               <span>Order ID:</span>
-              <span>#{{ orderId }}</span>
+              <span>{{ orderId }}</span>
             </div>
             <div class="info-row">
               <span>Date:</span>
-              <span>{{ new Date().toLocaleDateString() }}</span>
+              <span>{{ formatDate(date|| "") }}</span>
             </div>
             <div class="info-row">
-              <span>Total Amount:</span>
-              <span>${{ total.toFixed(2) }}</span>
+              <span>Status:</span>
+              <span>{{ status }}</span>
             </div>
-            <div v-if="discount > 0" class="info-row">
-              <span>Discount Applied:</span>
-              <span>{{ discount }}%</span>
-            </div>
+
           </div>
         </div>
   
         <div class="action-buttons">
           <button class="home-btn" @click="goToHome">
             Back to Home
-          </button>
-          <button class="invoice-btn" @click="viewInvoice">
-            View Invoice
           </button>
         </div>
       </div>
@@ -44,32 +38,66 @@
   <script setup lang="ts">
   import { ref, onMounted } from 'vue';
   import { useRouter, useRoute } from 'vue-router';
-  
+  import { orderStore } from '../store/orderStore';
+  export interface Order {
+  id: number
+  userId: number
+  createdAt: string
+  sessionId: string
+  status: string
+  courseIds: string[]
+}
+  const order = orderStore();
   const router = useRouter();
   const route = useRoute();
-  
-  const orderId = ref(Math.random().toString(36).substr(2, 9).toUpperCase());
+  const dataOrder = ref<Order[]>()
+  const date = ref<string>();
+  const orderId = ref<string>();
   const total = ref(0);
   const discount = ref(0);
-  
+  const status = ref<string>();
   const goToHome = () => {
     router.push('/');
   };
-  
+  const formatDate = (dateString: string) => {
+      const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
+      return new Date(dateString).toLocaleDateString(undefined, options);
+    };
   const viewInvoice = () => {
     // For now just console.log, later implement invoice view
     console.log('View invoice for order:', orderId.value);
     // router.push(`/invoice/${orderId.value}`);
   };
   
-  onMounted(() => {
-    // Get payment details from route state or query
+  const initializeData = () => {
+  if (dataOrder.value && dataOrder.value.length > 0) {
+    const lastOrder = dataOrder.value[dataOrder.value.length - 1];
+    orderId.value = lastOrder.sessionId || "";
+    status.value = lastOrder.status || "";
+    date.value = lastOrder.createdAt || "";
+    
+    // If you need other data from the last order:
+    // total.value = lastOrder.totalPrice || 0;
+    // user.value = lastOrder.user?.userName || "Unknown";
+  }
+};
+
+onMounted(async () => {
+  try {
+    await order.getOrder(); // Make sure this fetches the orders data
+    dataOrder.value = order.ordersPer; // Assuming this contains the orders array
+    
+    initializeData();
+    
     if (route.params.paymentDetails) {
       const details = JSON.parse(route.params.paymentDetails as string);
       total.value = details.total;
       discount.value = details.discount;
     }
-  });
+  } catch (error) {
+    console.error("Error initializing order data:", error);
+  }
+});
   </script>
   
   <style scoped>
@@ -88,7 +116,7 @@
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     text-align: center;
-    max-width: 500px;
+    max-width: 1000px;
     width: 100%;
   }
   

@@ -41,7 +41,7 @@
               <div v-else class="chapters">
                 <div v-for="chapter in chapters" :key="chapter.id" style="cursor: pointer;">
                   
-                  <div @click="fetchLessons(chapter.id)">
+                  <div @click.stop="fetchLessons(chapter.id)">
                     <div class="chapter-info">
                       <h3>Chapter {{chapter.position}}: {{ chapter.title }}</h3>
                       <div class="chapter-actions">
@@ -53,17 +53,47 @@
                         </button>
                       </div>
                     </div>
-                    <div v-if="true" class="lessons-list">    
-                      <div v-for="lesson in chapter.lessons" :key="lesson.id" class="lesson-item" @click="goToLesson()">
-                        <span class="lesson-title">Lesson #{{ lesson.position }} : {{lesson.title}}</span>
-                        <div class="chapter-actions">
-                        <button class="action-btn edit-btn" @click.stop="editLesson(chapter.id,lesson.id)">
-                          <FontAwesomeIcon :icon="faPen" />
-                        </button>
-                        <button class="action-btn delete-btn" @click.stop="deleteLesson(lesson.id)">
-                          <FontAwesomeIcon :icon="faTrash" />
-                        </button>
-                      </div>
+                    <div v-if="true" >    
+                      <div v-for="lesson in chapter.lessons" :key="lesson.id" class="lesson-item-container  ">
+                        <!-- Lesson Item -->
+                        <div class="lesson-item" @click="goToLesson(lesson.id)">
+                          <span class="lesson-title">Lesson #{{ lesson.position }} : {{ lesson.title }}</span>
+                          <div class="chapter-actions">
+                            <button class="action-btn edit-btn" @click.stop="editLesson(chapter.id, lesson.id)">
+                              <FontAwesomeIcon :icon="faPen" />
+                            </button>
+                            <button class="action-btn delete-btn" @click.stop="deleteLesson(lesson.id)">
+                              <FontAwesomeIcon :icon="faTrash" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <!-- Quiz List -->
+                        <div class="quiz-list" v-if="!isLoadingQuizzes">
+                          <div class="quiz-header">
+                            <h4>Quizzes</h4>
+                            <button 
+                              class="add-quiz-btn" 
+                              @click.stop="addQuiz(lesson.id)"
+                              v-if="!lesson.quizzes || lesson.quizzes.length === 0"
+                            >
+                              <FontAwesomeIcon :icon="faPlus" />
+                              Add Quiz
+                            </button>
+                            <div class="chapter-actions" v-else>
+                              <button class="action-btn edit-btn" @click.stop="editQuiz(lesson.quizzes[0].id, lesson.id)">
+                                <FontAwesomeIcon :icon="faPen" />
+                              </button>
+                              <button class="action-btn delete-btn" @click.stop="deleteQuiz(lesson.quizzes[0].id, lesson.id)">
+                                <FontAwesomeIcon :icon="faTrash" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="loading-placeholder" v-else>
+                          <!-- Placeholder hoặc loading spinner -->
+                        </div>
+
                       </div>
                     </div>
                     <div class="create-lesson-container">
@@ -73,6 +103,7 @@
                       </button>
                     </div>
                   </div>
+                  <hr class="chapter-divider" />
                 </div>
               </div>
             </div>
@@ -159,7 +190,7 @@ const router = useRouter();
 const route = useRoute();
 
 const api = axios.create({
-    baseURL: 'http://14.225.217.42:5000/api',
+    baseURL: 'http://localhost:3000/api',
   });
   api.interceptors.request.use((config) => {
     const token = localStorage.getItem('authToken');
@@ -168,7 +199,23 @@ const api = axios.create({
     }
     return config;
   });
-const newLesson = ref<FormData>({
+
+api.interceptors.response.use(
+  response => response,
+  error => {
+    // Lọc lỗi 404 từ endpoint quizzes
+    if (error.response && 
+        error.response.status === 404 && 
+        error.config.url.includes('/quizzes/lesson/')) {
+      // Tạo một response giả để không báo lỗi
+      console.log(`Không tìm thấy quiz cho endpoint: ${error.config.url}`);
+      return Promise.resolve({ data: null });
+    }
+    return Promise.reject(error);
+  }
+);
+
+const newLesson = ref<ILesson>({
   id: 0,
   title: '',
   description: '',
@@ -262,8 +309,8 @@ const editChapter = (chapter: IChapter) => {
   chapterPosition.value = chapter.position;
 };
 
-const goToLesson = () => {
-  router.push(`/courses/learn/${courseId}`);
+const goToLesson = (lessonId: number) => {
+  router.push(`/courses/learn/${courseId}?lessonId=${lessonId}`);
 };
 
 const deleteLesson = async (lessonId: number) => {
@@ -280,6 +327,106 @@ const deleteLesson = async (lessonId: number) => {
   } 
   }
 };
+
+const fetchQuizForLesson = async (lessonId: number) => {
+  try {
+    console.log(`Đang tìm quiz cho lesson ${lessonId}...`);
+    
+    // Sử dụng try-catch nội bộ để xử lý lỗi 404 cụ thể
+    try {
+      const response = await api.get(`/quizzes/lesson/${lessonId}`);
+      console.log(`Kết quả quiz cho lesson ${lessonId}:`, response.data);
+      
+      // Tìm chapter và lesson tương ứng để cập nhật
+      for (const chapter of chapters.value) {
+        if (!chapter.lessons) continue;
+        
+        const lesson = chapter.lessons.find(l => l.id === lessonId);
+        if (lesson) {
+          // Nếu API trả về dữ liệu, cập nhật lesson.quizzes
+          if (response.data) {
+            // Đảm bảo trường quizzes tồn tại
+            if (!lesson.quizzes) {
+              lesson.quizzes = [];
+            }
+            
+            // Thêm quiz vào lesson nếu chưa tồn tại
+            const quizExists = lesson.quizzes.some(q => q.id === response.data.id);
+            if (!quizExists) {
+              lesson.quizzes.push(response.data);
+              console.log(`Đã thêm quiz ${response.data.id} vào lesson ${lessonId}`);
+            }
+          }
+          break;
+        }
+      }
+      return response.data;
+    } catch (error) {
+      // Bắt lỗi 404 và xử lý im lặng
+      if (error.response && error.response.status === 404) {
+        console.log(`Không tìm thấy quiz cho lesson ${lessonId}`);
+        return null;
+      }
+      // Nếu không phải lỗi 404, ném lại lỗi để xử lý bên ngoài
+      throw error;
+    }
+  } catch (error) {
+    // Xử lý các lỗi khác (không phải 404)
+    console.error(`Lỗi khi tìm quiz cho lesson ${lessonId}:`, error);
+    return null;
+  }
+};
+
+const fetchAllQuizzes = async () => {
+  console.log('Tải quiz cho tất cả lessons...');
+  for (const chapter of chapters.value) {
+    if (!chapter.lessons) continue;
+    
+    for (const lesson of chapter.lessons) {
+      await fetchQuizForLesson(lesson.id);
+    }
+  }
+};
+
+const addQuiz = (lessonId: number) => {
+  // Tìm lesson có id tương ứng
+  const lesson = chapters.value
+    .flatMap((chapter) => chapter.lessons || [])
+    .find((lesson) => lesson.id === lessonId);
+  
+  // Nếu lesson có quiz, chuyển đến trang edit quiz
+  if (lesson && lesson.quizzes && lesson.quizzes.length > 0) {
+    const quizId = lesson.quizzes[0].id;
+    router.push(`/course-teacher/lessons/${lessonId}/quizzes/${quizId}/edit`);
+  } else {
+    // Nếu không, chuyển đến trang tạo quiz mới
+    router.push(`/course-teacher/lessons/${lessonId}/quizzes/create`);
+  }
+};
+
+const editQuiz = (quizId: number, lessonId: number) => {
+  router.push(`/course-teacher/lessons/${lessonId}/quizzes/${quizId}/edit`);
+};
+
+const deleteQuiz = async (quizId: number, lessonId: number) => {
+  const confirmDelete = window.confirm('Are you sure you want to delete this quiz?');
+  if (confirmDelete) {
+    try {
+      await api.delete(`/quizzes/${quizId}`);
+      toast.success('Quiz deleted successfully!');
+      // Cập nhật danh sách quiz sau khi xóa
+      const lesson = chapters.value
+        .flatMap((chapter) => chapter.lessons)
+        .find((lesson) => lesson.id === lessonId);
+      if (lesson) {
+        lesson.quizzes = lesson.quizzes.filter((quiz) => quiz.id !== quizId);
+      }
+    } catch (error) {
+      console.error('Error deleting quiz:', error);
+      toast.error('Failed to delete quiz');
+    }
+  }
+};
 const courseResponse = ref<ICourse>();
 const fetchCourse = async (id: number) => {
   try {
@@ -291,29 +438,65 @@ const fetchCourse = async (id: number) => {
     toast.error('Failed to load course data');
   }
 };
+const isLoadingQuizzes = ref(true);
 const fetchChapters = async (courseId: number) => {
   try {
+    isLoadingQuizzes.value = true;
     const { data } = await api.get(`/chapters/course/${courseId}`);
     chapters.value = data;
     totalChapters.value = chapters.value.length;
     nextChapterPosition.value = chapters.value.length + 1;
+    
+    // Tải tất cả quizzes sau khi đã tải chapters
+    await fetchAllQuizzes();
+    
   } catch (error) {
     console.error('Error fetching chapters:', error);
     toast.error('Failed to load chapters');
   }finally{
     newChapter.value = { title: '', position: totalChapters.value + 1 };
+    isLoadingQuizzes.value = false;
   }
-  
 };
 
 const isLessonEmpty = ref(false);
 const fetchLessons = async (chapterId: number) => {
+  // Kiểm tra nếu chapter đã có lessons thì không tải lại
+  const targetChapter = chapters.value.find(chapter => chapter.id === chapterId);
+  if (targetChapter && targetChapter.lessons && targetChapter.lessons.length > 0) {
+    console.log('Chapter đã có lessons, không tải lại');
+    return;
+  }
+  
   try {
+    console.log(`Đang tải lessons cho chapter ${chapterId}...`);
     const { data } = await api.get<listLesson>(`/lessons/chapter/${chapterId}`);
-      if (data) {
-      newLessonsMap.value = data;
+    if (data) {
+      console.log('Dữ liệu lessons nhận được:', data);
+      
+      // Cập nhật lessons cho chapter tương ứng
+      if (targetChapter) {
+        // Đảm bảo mỗi lesson có danh sách quizzes ban đầu là rỗng
+        targetChapter.lessons = data.map((lesson) => ({
+          ...lesson,
+          quizzes: [], // Bắt đầu với mảng rỗng, sẽ cập nhật sau
+        }));
+        
+        // Tải quizzes cho mỗi lesson
+        for (const lesson of targetChapter.lessons) {
+          const quizData = await fetchQuizForLesson(lesson.id);
+          if (quizData) {
+            lesson.quizzes = [quizData]; // Thêm quiz vào lesson nếu tìm thấy
+          }
+        }
+        
+        console.log(`Đã cập nhật lessons và quizzes cho chapter ${chapterId}:`, targetChapter.lessons);
+      }
+      
+      // Cập nhật newLessonsMap cho các mục đích khác
+      newLessonsMap.value = targetChapter?.lessons || [];
       isLessonEmpty.value = newLessonsMap.value.length === 0;
-      } 
+    }
   }
   catch (error) {
     console.error('Error fetching lessons:', error);
@@ -327,6 +510,16 @@ onMounted(() => {
     fetchChapters(Number(courseId));
   }
   
+  // Thêm lắng nghe sự kiện router để tải lại dữ liệu khi quay lại
+  router.beforeResolve((to, from, next) => {
+    // Nếu quay lại từ trang tạo/sửa quiz
+    if (from.path.includes('/quizzes') && to.path === router.currentRoute.value.path) {
+      console.log('Quay lại từ trang quiz, tải lại dữ liệu...');
+      fetchCourse(Number(courseId));
+      fetchChapters(Number(courseId));
+    }
+    next();
+  });
 });
 
 </script>
@@ -334,7 +527,7 @@ onMounted(() => {
 <style scoped>
 .chapter-page {
   width: 100%;
-  min-height: 120vh;
+  /* min-height: 120vh; */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -426,7 +619,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 40px;
 }
 
 .add-chapter-btn {
@@ -459,7 +652,7 @@ onMounted(() => {
   padding: 16px;
   border: 1px solid #e5e7eb;
   margin-bottom: 12px;
-  height: 60px;
+  height: 50px;
   border-radius: 20px;
   display: flex;
   align-items: center;
@@ -803,10 +996,12 @@ onMounted(() => {
 .create-lesson-container {
   margin: 12px 0;
   padding: 16px;
-  border: 1px solid #e5e7eb;
+  /* border: 1px solid #e5e7eb; */
   border-radius: 12px;
-  background-color: #f9fafb;
+  /* background-color: #f9fafb; */
   transition: all 0.3s ease;
+  margin-left: 24px;
+  height: 50px
 }
 
 .create-lesson-container:hover {
@@ -835,23 +1030,18 @@ onMounted(() => {
   gap: 12px;
 }
 
-.lessons-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 12px 0;
-}
-
 .lesson-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 16px;
-  background-color: #f9fafb;
-  border: 1px solid #e5e7eb;
+  /* background-color: #f9fafb; */
+  /* border: 1px solid #e5e7eb; */
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
+  margin-left: 24px;
+  height: 50px;
 }
 
 .lesson-item:hover {
@@ -865,6 +1055,102 @@ onMounted(() => {
   font-size: 16px;
   font-weight: 600;
   color: #6c9d8f;
+}
+
+.quiz-list {
+  margin-top: 12px; 
+  padding: 16px;
+  border-radius: 12px;
+  margin-left: 48px; 
+  transition: all 0.3s ease;
+  height: 50px;
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+}
+
+.quiz-list:hover {
+  background-color: #f3f4f6;
+  border-color: #6c9d8f;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.quiz-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.quiz-header h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.quiz-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.quiz-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.add-quiz-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #6c9d8f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.add-quiz-btn:hover {
+  background: #5a8a7d;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.update-quiz-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #4a7a6d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.update-quiz-btn:hover {
+  background: #3a6a5d;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chapter-divider {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 24px 0; 
+  width: 100%;
 }
 
 </style>

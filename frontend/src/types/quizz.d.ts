@@ -1,4 +1,5 @@
 export interface IQuiz {
+    id?: number
     title: string
     description: string
     lessonId: number
@@ -17,9 +18,10 @@ export interface IQuiz {
   export interface IOption {
     text: string
     isCorrect: boolean
-    explanation: string
+    explanation: string 
   }
 
-  export interface IQui extends IQuiz{
-    id: number; 
-  }
+  // Interface này không cần thiết vì đã thêm id vào IQuiz
+  // export interface IQui extends IQuiz{
+  //   id: number; 
+  // }

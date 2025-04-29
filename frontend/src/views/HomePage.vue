@@ -309,7 +309,7 @@ export default defineComponent({
     const fetchPopularCourses = async () => {
       // try {
       //   const popularResponse = await fetch(
-      //     'http://14.225.217.42:5000/api/courses?sortBy=totalStudents&order=desc'
+      //     'http://localhost:3000/api/courses?sortBy=totalStudents&order=desc'
       //   )
       //   const popularData = await popularResponse.json()
       //   popularCourses.value = popularData.items.map((course) => transformCourseData(course))
@@ -317,7 +317,7 @@ export default defineComponent({
       //   console.error('Error fetching popular courses:', error)
       // }
 
-      const popularResponse = await fetch('http://14.225.217.42:5000/api/courses')
+      const popularResponse = await fetch('http://localhost:3000/api/courses')
       const popularData = await popularResponse.json()
       popularCourses.value = popularData.items
       // For demo, just take first few as popular courses

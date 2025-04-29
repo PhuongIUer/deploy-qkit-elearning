@@ -108,7 +108,7 @@
   try {
     if (!validateForm()) return;
 
-    const response = await axios.post('http://14.225.217.42:5000/api/auth/login', {
+    const response = await axios.post('http://localhost:3000/api/auth/login', {
       email: email.value,
       password: password.value
     });

@@ -94,22 +94,7 @@
               </div>
             </div>
 
-            <div class="quiz-section">
-              <label>Quizzes</label>
-              <button class="add-quiz-btn" @click="showQuizModal = true">
-                <font-awesome-icon :icon="faPlus" />
-                Add
-              </button>
-            </div>
-
-            <Quizz
-              v-model:showQuizModal="showQuizModal" 
-              :quizTitle="quizTitle" 
-              :questionSets="questionSets" 
-              @saveQuiz="saveQuiz"
-            />
-
-            <button class="create-btn" @click="handleSubmit">
+            <button class="create-btn" @click="handleSubmit" :disabled="isLoading">
               <span v-if="!isLoading">{{editMode?"Update":"Submit"}}</span>
               <span v-else>
                 Loading<span v-for="n in loadingDots" :key="n">.</span>
@@ -129,12 +114,13 @@ import { toast } from 'vue3-toastify';
 import BackButton from '../../components/BackButton.vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { faBook, faGear, faUpload, faPlus} from '@fortawesome/free-solid-svg-icons';
-import Quizz from '../../components/Quizz.vue';
 import axios from 'axios';
-import type { ILesson, IChapter, IMenuItem } from '../../types/lesson'
+import type { IChapter, IMenuItem } from '../../types/lesson'
 import type { ICourse } from '../../types/course';
+import type {IOption } from '../../types/quizz';
+
 const api = axios.create({
-      baseURL: 'http://14.225.217.42:5000/api',
+      baseURL: 'http://localhost:3000/api',
     });
     api.interceptors.request.use((config) => {
       const token = localStorage.getItem('authToken');
@@ -143,7 +129,7 @@ const api = axios.create({
       }
       return config;
     });
-interface lessonResopnse {
+interface lessonResponse {
   id: number
   title: string
   description: string
@@ -153,11 +139,12 @@ interface lessonResopnse {
   chapter: IChapter
   chapterId: number
 }
+const createdQuiz = ref<{ title: string; passingScore?: number; timeLimit?: number; questions: Question[] } | null>(null);
 const route = useRoute();
 const router = useRouter();
 const chapterId = Number(route.params.chapterId);
 const lessonId = Number(route.params.lessonId);
-const oldLesson = ref<lessonResopnse>();
+// const oldLesson = ref<lessonResponse>();
 const totalLessons = ref(0);
 interface Lesson {
   chapterId : number;
@@ -173,6 +160,7 @@ const lesson = ref<Lesson>({
   position: 0,
   videoUrl: '',
 });
+
 
 interface Chapter {
   id: number
@@ -212,7 +200,7 @@ const fetchChapter = async () => {
 };
 const fetchLessons = async () => {
   try {
-    const {data} = await api.get<lessonResopnse>(`/lessons/${lessonId}`);
+    const {data} = await api.get<lessonResponse>(`/lessons/${lessonId}`);
     lesson.value.title = data.title;
     lesson.value.description = data.description;
     lesson.value.position = data.position;
@@ -222,15 +210,21 @@ const fetchLessons = async () => {
     toast.error('Failed to load lessons');
   }
 };
+
 const selectedVideo = ref<File | null>(null);
 const videoPreviewUrl = ref<string | null>(null);
 const videoInputRef = ref<HTMLInputElement | null>(null);
 
 const handleSubmit = () => {
-  if (!lesson.value.title || !lesson.value.description || !lesson.value.videoUrl) {
+  if (!lesson.value.title || !lesson.value.description) {
     toast.error('Please fill in all required fields!');
     return;
   }
+  if (!lesson.value.videoUrl && !selectedVideo.value && !editMode.value) {
+    toast.error('Please upload a video!');
+    return;
+  }
+
   submitLesson();
 };
 const isLoading = ref(false);
@@ -242,12 +236,14 @@ const submitLesson = async () => {
   formData.append('title', lesson.value.title);
   formData.append('description', lesson.value.description);
   formData.append('position', lesson.value.position.toString());
-  if(!editMode.value) {
+  if (!editMode.value) {
     formData.append('chapterId', lesson.value.chapterId.toString());
   }
-   
+
   if (selectedVideo.value) {
     formData.append('video', selectedVideo.value);
+  } else if (lesson.value.videoUrl) {
+    formData.append('videoUrl', lesson.value.videoUrl);
   }
 
   isLoading.value = true;
@@ -257,20 +253,21 @@ const submitLesson = async () => {
   }, 300);
 
   try {
-    if(editMode.value) {
+    if (editMode.value) {
       await api.patch(`/lessons/${lessonId}`, formData);
       toast.success('Lesson updated successfully!');
     } else {
       await api.post(`/lessons`, formData);
       toast.success('Lesson created successfully!');
     }
-    router.go(-1);
+
+    router.go(-1); 
   } catch (error) {
-    console.error('Error creating lesson:', error);
-    toast.error('Failed to create lesson');
+    console.error('Error creating/updating lesson:', error);
+    toast.error('Failed to create/update lesson');
   } finally {
-    clearInterval(loadingInterval);
-    isLoading.value = false;
+    clearInterval(loadingInterval); 
+    isLoading.value = false; 
   }
 };
 
@@ -293,24 +290,48 @@ const editMode = ref(false);
 const checkEditMode = () => {
   editMode.value = (route.params.lessonId !== undefined);
 };
-//Quiz Modal
-const showQuizModal = ref(false);
-const quizTitle = ref('');
-const questionSets = ref([
-  { questionNumber: '', questionText: '', answers: ['', '', '', ''] },
-]);
 
 interface Question {
   questionNumber: string;
   questionText: string;
   answers: string[];
+  options: IOption[]; 
+  points: number; 
+  order: number;
 }
 
-const saveQuiz = (quizData: { title: string; questions: Question[] }) => {
-  console.log('Quiz saved:', quizData);
-  toast.success('Quiz saved successfully!');
-  showQuizModal.value = false;
-};
+// const saveQuiz = async (quizData: IQuiz) => {
+//   try {
+//     // Làm sạch dữ liệu quiz
+//     const cleanedQuiz: IQuiz = {
+//       title: quizData.title,
+//       description: quizData.description,
+//       lessonId: quizData.lessonId,
+//       passingScore: quizData.passingScore,
+//       timeLimit: quizData.timeLimit,
+//       questions: quizData.questions.map((question) => ({
+//         question: question.question, // Đảm bảo đây là chuỗi
+//         points: question.points || 10,
+//         order: question.order,
+//         options: question.options.map((option: IOption) => ({
+//           text: option.text,
+//           isCorrect: option.isCorrect,
+//           explanation: option.explanation || '',
+//         })),
+//       })),
+//     };
+
+//     console.log('Cleaned quiz data:', JSON.stringify(cleanedQuiz, null, 2)); // Debug dữ liệu trước khi gửi
+//     const response = await api.post('/quizzes', cleanedQuiz);
+//     createdQuiz.value = response.data; // Lưu dữ liệu trả về từ backend
+//     toast.success('Quiz saved successfully!');
+//     showQuizModal.value = false;
+//     hasQuiz.value = true;
+//   } catch (error) {
+//     console.error('Error saving quiz:', error);
+//     toast.error('Failed to save quiz');
+//   }
+// };
 
 onMounted(() => {
   checkEditMode();
@@ -319,7 +340,9 @@ onMounted(() => {
     fetchLessons();
   }
 });
+
 </script>
+
 
 <style scoped>
 .lesson-page {
@@ -529,36 +552,6 @@ onMounted(() => {
   display: none;
 }
 
-.quiz-section {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.quiz-section label {
-  font-weight: 600;
-  color: #333;
-}
-
-.add-quiz-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background-color: #6c9d8f;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s ease;
-}
-
-.add-quiz-btn:hover {
-  background-color: #5a8a7d;
-}
-
 .create-btn {
   padding: 12px 24px;
   background-color: #6c9d8f;
@@ -596,158 +589,5 @@ onMounted(() => {
   background-color: #5a8a7d;
 }
 
-/* Quiz Modal Styles */
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 50;
-}
-
-.modal {
-  background: white;
-  padding: 24px;
-  border-radius: 16px;
-  max-width: 800px;
-  width: 90%;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-  margin-top: 60px;
-  max-height: 80vh; 
-  overflow-y: auto;
-}
-
-.question-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.delete-button {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  margin-left: 8px;
-  color: #6c9d8f;
-  font-size: 18px;
-}
-
-.delete-button:hover {
-  color: #5a8a7d;
-}
-
-.quiz-title {
-  text-align: center;
-  font-size: 24px;
-  margin-bottom: 20px;
-}
-
-.quiz-title-wrapper {
-  display: flex;
-  justify-content: center;
-}
-
-.quiz-input {
-  display: block;
-  border: 1px solid #aaa;
-  border-radius: 16px;
-  padding: 10px 14px;
-  margin: 8px 0;
-}
-
-.quiz-title-input {
-  text-align: center;
-}
-
-.quiz-textarea {
-  width: 100%;
-  border: 1px solid #aaa;
-  border-radius: 16px;
-  padding: 12px 14px;
-  resize: none;
-  margin: 8px 0;
-  text-align: center;
-  align-content: center;
-}
-
-.answers-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 20px;
-}
-
-.answer-item {
-  display: flex;
-  align-items: center;
-  border: 1px solid #aaa;
-  border-radius: 16px;
-  padding: 8px 12px;
-  margin-bottom: 8px;
-}
-
-.answer-item input[type="radio"] {
-  width: 20px;
-  height: 20px;
-  accent-color: #6c9d8f;
-  cursor: pointer;
-}
-
-.answer-input {
-  flex-grow: 1;
-  border: none;
-  outline: none;
-  background: transparent;
-  align-content: center;
-  margin-left: 10px;
-  resize: none;
-}
-
-.add-more {
-  cursor: pointer;
-  justify-content: center;
-  border: 1px dashed #aaa;
-  transition: all 0.3s ease;
-
-}
-
-.add-more .plus-icon {
-  margin-right: 8px;
-  font-weight: bold;
-}
-
-.add-more:hover {
-  cursor: pointer;
-  background-color: #e6f4f1;
-  transform: scale(1.01);
-
-}
-
-.action-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 20px;
-}
-
-.cancel-btn, .save-btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 16px;
-  cursor: pointer;
-}
-
-.cancel-btn {
-  background: #999;
-  color: white;
-}
-
-.save-btn {
-  background: #4D756C;
-  color: white;
-}
 
 </style>

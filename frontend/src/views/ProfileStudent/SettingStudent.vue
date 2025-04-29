@@ -8,10 +8,10 @@
             v-for="menu in menuItems"
             :key="menu.id"
             class="menu-btn"
-            :class="{ 'active': menu.id === 'settings' }"
-            @click="handleNavigation(menu.id)"
+            :class="{ 'active': activeSection === menu.id }"
+            @click="setActiveSection(menu.id)"
           >
-            <font-awesome-icon :icon="[menu.icon]" />
+            <FontAwesomeIcon :icon="menu.icon" />
             {{ menu.label }}
           </button>
         </div>
@@ -143,6 +143,7 @@ import { faBook, faGear, faUpload } from '@fortawesome/free-solid-svg-icons';
 import defaultAvatar from '../../assets/ava.jpg';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
+
 const authStore = useAuthStore();
 const { isLoggedIn, userName, userAvatar, email } = storeToRefs(authStore);
 
@@ -185,7 +186,15 @@ const handleImageError = (e: Event) => {
   const target = e.target as HTMLImageElement;
   target.src = defaultAvatar;
 };
-
+// Methods
+const activeSection = ref<string>('settings');
+const setActiveSection = (section: string): void => {
+  if (section === 'course') {
+    router.push('/course-student');
+  } else {
+    activeSection.value = section;
+  }
+};
 const handleAvatarChange = (event: Event) => {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
@@ -244,7 +253,7 @@ const handleSubmitPassword = async () => {
     };
 
     // API call to change the password
-    const response = await fetch('http://14.225.217.42:5000/api/auth/change-password', {
+    const response = await fetch('http://localhost:3000/api/auth/change-password', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -280,7 +289,7 @@ const handleSubmitProfile = async () => {
       formDataToSend.append('avatar', tempAvatarFile.value);
     }
 
-    const response = await fetch('http://14.225.217.42:5000/api/users/current-profile', {
+    const response = await fetch('http://localhost:3000/api/users/current-profile', {
       method: 'PATCH',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`,

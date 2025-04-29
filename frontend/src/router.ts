@@ -34,10 +34,10 @@ const publicRoutes: Array<RouteRecordRaw> = [
     meta: { title: 'Order Cheking' },
   },
   {
-    path: 'courses/quiz/:lessonId',
+    path: '/courses/quiz/:quizId/:lessonId?',
     name: 'quiz',
     component: () => import(/* webpackChunkName: "courses" */ './views/QuizPage.vue'),
-    meta: { title: 'Courses' },
+    meta: { title: 'Quiz', requiresAuth: true },  
   },
   {
     path: 'roadmap',
@@ -68,6 +68,12 @@ const publicRoutes: Array<RouteRecordRaw> = [
     name: 'reset-password',
     component: () => import(/* webpackChunkName: "auth" */ './views/ResetPassword.vue'),
     meta: { title: 'Reset Password', guestOnly: true },
+  },
+  {
+    path: '/verify-email',
+    name: 'verify-email',
+    component: () => import(/* webpackChunkName: "auth" */ './views/auth/VerifyEmail.vue'),
+    meta: { title: 'Verify Email', guestOnly: true },
   },
 ]
 
@@ -115,10 +121,39 @@ const teacherRoutes: Array<RouteRecordRaw> = [
     component: () => import(/* webpackChunkName: "teacher" */ './views/Teacher/CreateChapter.vue'),
     meta: { title: 'Create Chapter', requiresAuth: true },
   },
+
+  {
+    path: '/course-teacher/lessons/:lessonId/quizzes/create',
+    name: 'create-quiz',
+    component: () => import(/* webpackChunkName: "teacher" */ './views/Teacher/Quiz.vue'),
+    meta: { title: 'Create Quiz', requiresAuth: true },
+
+  },
+  {
+    path: '/course-teacher/lessons/:lessonId/quizzes/:quizId/edit',
+    name: 'edit-quiz',
+    component: () => import(/* webpackChunkName: "teacher" */ './views/Teacher/Quiz.vue'),
+    meta: { title: 'Edỉ Quiz', requiresAuth: true },
+
+  },
 ];
 
 
 const studentRoutes: Array<RouteRecordRaw> = [
+  {
+    path: 'success',
+    name: 'success',
+    component: () =>
+      import(/* webpackChunkName: "student" */ './views/SuccessPage.vue'),
+    meta: { title: 'Success', requiresAuth: true },
+  },
+  {
+    path: 'fail',
+    name: 'fail',
+    component: () =>
+      import(/* webpackChunkName: "student" */ './views/FailPage.vue'),
+    meta: { title: 'Fail', requiresAuth: true },
+  },
   {
     path: 'course-student',
     name: 'course-student',
@@ -183,12 +218,6 @@ const routes: Array<RouteRecordRaw> = [
     path: '/',
     component: () => import('./layouts/MainLayout.vue'),
     children: [...publicRoutes, ...studentRoutes, ...teacherRoutes, ...adminRoutes],
-  },
-  {
-    path: '/verify-email',
-    name: 'verify-email',
-    component: () => import(/* webpackChunkName: "auth" */ './views/auth/VerifyEmail.vue'),
-    meta: { title: 'Verify Email', guestOnly: true },
   },
   {
     path: '/:pathMatch(.*)*',
