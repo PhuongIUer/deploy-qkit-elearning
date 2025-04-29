@@ -92,7 +92,6 @@ const navigateToCourse = (courseIdItem: number) => {
 }
 const ssId = ref('')
 const orderDetails = ref<OrderDetails | null>(null);
-const loading = ref(false);
 const error = ref<string | null>(null);
 
 const setDefaultCourseImage = (e: Event) => {
