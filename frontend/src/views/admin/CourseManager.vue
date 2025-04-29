@@ -62,7 +62,7 @@
               <td>{{ course.totalLessons }}</td>
               <td>{{ course.totalStudents }}</td>
               <td class="button-container">
-                <button @click="viewCourse(course.slug)" class="view-button">View</button>
+                <button @click="viewCourse(course.id)" class="view-button">View</button>
                 <button @click="confirmDelete(course.id)" class="delete-button">Delete</button>
               </td>
             </tr>
@@ -298,8 +298,8 @@ export default defineComponent({
     };
 
     // Course actions
-    const viewCourse = (slug: string) => {
-      router.push(`/courses/${slug}`);
+    const viewCourse = (id: number) => {
+      router.push(`/courses/learn/${id}`);
     };
 
     onMounted(() => {

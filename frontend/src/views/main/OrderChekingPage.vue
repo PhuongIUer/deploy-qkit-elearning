@@ -107,7 +107,7 @@ const statusClass = computed(() => {
     'Cancelled': 'status-cancelled'
   }[orderDetails.value.status] || '';
 });
-const loading = ref(true);
+const loading = ref(false);
 const apiData = ref<orderRespone>()
 const totalItems = ref(0)
 const items = ref<MCourse[]>()
